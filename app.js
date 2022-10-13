@@ -1,49 +1,65 @@
 const express = require('express');
-const products = require('./products');
-const data = require('./products');
+let {people} = require('./data');
 const app = express();
 
+// serving static files
+app.use(express.static('./method-public'));
 
-app.get('/', (req,res) => {
-    res.send("<h1>Home</h1> <a href='/api/products'>Products</a>");
-})
+//using body parser and extended is false standard
+app.use(express.urlencoded({extended: false}));
 
-app.get('/api/products', (req, res) => {
-    const products = data.map((product) => {
-        const {id, title, price} = product;
-        return {id, title, price}
-    });
-    res.json(products);
-})
+//json parser 
+app.use(express.json());
 
-app.get('/api/products/:productID', (req, res)=> {
-    const singleProduct = data.find(product => product.id === Number(req.params.productID));
-
-    if(!singleProduct) {
-        res.status(404).send('<h1>Product Not Found!</h1>');
-    }
-
-    res.json(singleProduct);
+app.get('/api/people', (req, res) => {
+    res.status(200).json({success:true, data: people});
 });
 
-app.get('/api/v1/query', (req,res) => {
-    let sortedProducts = [...data];
-    const {search, limit} = req.query;
-
-    if(search) {
-        sortedProducts = sortedProducts.filter((p) => p.title.startsWith(search));
+app.post('/login', (req, res) => {
+    const {name} = req.body;
+    if (name) {
+        res.send('Done! Thank you!');
+    } else {
+        res.send('Please submit the data');
     }
-
-    if(limit) {
-        sortedProducts = sortedProducts.slice(0, Number(limit));
-    }
-
-    if(sortedProducts.length < 1) {
-       return res.status(200).send('<h1>No such product found!</h1>');
-    }
-
-    res.status(200).json(sortedProducts);
 })
 
+app.post('/api/people', (req,res) => {
+    let {name} = req.body;
+
+    if (!name) {
+        res.send('Please enter valid data');
+    }
+    res.status(201).json({success: true, person:name});
+});
+
+app.post('/api/postman/people', (req,res) => {
+    let {name} = req.body;
+
+    if (!name) {
+        res.send('Please enter valid data');
+    }
+    res.status(201).json({success: true, data: [...people, name]});
+});
+
+app.put('/api/people/:id', (req,res) => {
+    const {id} = req.params;
+    const {name} = req.body;
+
+    const person = people.find((pep) => pep.id === Number(id))
+
+    if (!person) {
+        return res.send(`No such person with id ${id} found!`);
+    }
+
+    const newPeople = people.map((guy) => {
+        if (guy.id === Number(id)) {
+            guy.name = name;
+        return people;
+    }})
+
+    res.json(newPeople);
+    
+})
 
 app.listen(5000, console.log('server running...'));
